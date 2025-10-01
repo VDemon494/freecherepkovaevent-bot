@@ -1,4 +1,8 @@
 {
-  "checklist": { "url": "https://example.com/checklist" },
-  "guide":     { "url": "https://example.com/guide" }
+  "venues":         { "url": "https://www.cherepkovaevent.ru/bez-arendi" },
+  "hidden_costs":   { "url": "https://cherepkova.site/rashodi" },
+  "vs_diy":         { "url": "https://cherepkova.site/svad-byudzhet" },
+  "checklist":      { "url": "https://cherepkova.site/checklist" },
+  "budget_calc":    { "url": "https://cherepkova.site/budget" },
+  "venue_questions":{ "url": "https://cherepkova.site/voprosi-zal" }
 }

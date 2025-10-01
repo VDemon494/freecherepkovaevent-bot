@@ -25,17 +25,25 @@ ASSETS_FILE = Path("assets.json")
 ASSETS: Dict[str, Any] = {}
 
 TITLES = {
-    "checklist": "Чек-лист подготовки к свадьбе",
-    "guide": "Гайд «100 шагов подготовки»"
+    "venues": "Загородные площадки без аренды (Екатеринбург)",
+    "hidden_costs": "Скрытые расходы свадьбы",
+    "vs_diy": "Свадьба «под ключ» vs самостоятельная подготовка",
+    "checklist": "Бесплатный чек-лист: «Как подготовить свадьбу и ничего не забыть»",
+    "budget_calc": "Как рассчитать свадебный бюджет",
+    "venue_questions": "Какие вопросы задать площадке перед бронированием?"
 }
+
 
 MAIN_KB = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="🧾 Чек-лист"), KeyboardButton(text="📘 Гайд")],
+        [KeyboardButton(text="🏡 Площадки без аренды"), KeyboardButton(text="💸 Скрытые расходы")],
+        [KeyboardButton(text="⚖️ Под ключ vs DIY"),   KeyboardButton(text="🧮 Бюджет свадьбы")],
+        [KeyboardButton(text="🧾 Чек-лист"),          KeyboardButton(text="❓ Вопросы площадке")],
         [KeyboardButton(text="ℹ️ О нас")]
     ],
     resize_keyboard=True
 )
+
 
 # -------- утилиты --------
 def load_assets():
@@ -65,14 +73,22 @@ def link_kb_single(key: str) -> InlineKeyboardMarkup:
 
 def link_kb_all() -> InlineKeyboardMarkup:
     rows = []
-    if get_url("checklist"):
-        rows.append([InlineKeyboardButton(text="🧾 Открыть Чек-лист", url=get_url("checklist"))])
-    if get_url("guide"):
-        rows.append([InlineKeyboardButton(text="📘 Открыть Гайд", url=get_url("guide"))])
+    def row(key, label):
+        url = get_url(key)
+        if url:
+            rows.append([InlineKeyboardButton(text=label, url=url)])
+    row("venues",          "🏡 Площадки без аренды")
+    row("hidden_costs",    "💸 Скрытые расходы")
+    row("vs_diy",          "⚖️ Под ключ vs DIY")
+    row("checklist",       "🧾 Чек-лист")
+    row("budget_calc",     "🧮 Бюджет свадьбы")
+    row("venue_questions", "❓ Вопросы площадке")
+
     if not rows:
         fallback = f"https://t.me/{BOT_USERNAME}" if BOT_USERNAME else "https://t.me"
         rows = [[InlineKeyboardButton(text="Ссылки не настроены", url=fallback)]]
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
 
 # -------- бот --------
 bot = Bot(BOT_TOKEN)
@@ -82,7 +98,7 @@ dp = Dispatcher()
 async def start(message: types.Message):
     parts = (message.text or "").split(maxsplit=1)
     payload = parts[1].strip() if len(parts) == 2 else None
-    if payload in ("checklist", "guide"):
+    if payload in TITLES:
         url = get_url(payload)
         if url:
             await message.answer(f"{TITLES[payload]}\nНажмите кнопку ниже:", reply_markup=link_kb_single(payload))
@@ -163,6 +179,38 @@ async def post_direct(message: types.Message):
     kb = InlineKeyboardMarkup(inline_keyboard=rows)
     await bot.send_message(CHANNEL, text, reply_markup=kb)
     await message.reply("Пост с прямыми ссылками отправлен в канал ✅")
+# ==============================
+# Обработчики кнопок меню
+# ==============================
+
+@dp.message(F.text == "🏡 Площадки без аренды")
+async def kb_venues(m: types.Message):
+    await m.answer(TITLES["venues"], reply_markup=link_kb_single("venues"))
+
+@dp.message(F.text == "💸 Скрытые расходы")
+async def kb_hidden(m: types.Message):
+    await m.answer(TITLES["hidden_costs"], reply_markup=link_kb_single("hidden_costs"))
+
+@dp.message(F.text == "⚖️ Под ключ vs DIY")
+async def kb_vs(m: types.Message):
+    await m.answer(TITLES["vs_diy"], reply_markup=link_kb_single("vs_diy"))
+
+@dp.message(F.text == "🧮 Бюджет свадьбы")
+async def kb_budget(m: types.Message):
+    await m.answer(TITLES["budget_calc"], reply_markup=link_kb_single("budget_calc"))
+
+@dp.message(F.text == "🧾 Чек-лист")
+async def kb_checklist(m: types.Message):
+    await m.answer(TITLES["checklist"], reply_markup=link_kb_single("checklist"))
+
+@dp.message(F.text == "❓ Вопросы площадке")
+async def kb_questions(m: types.Message):
+    await m.answer(TITLES["venue_questions"], reply_markup=link_kb_single("venue_questions"))
+
+@dp.message(F.text == "ℹ️ О нас")
+async def kb_about(m: types.Message):
+    await m.answer("Агентство Cherepkova Event 💍\nОрганизация свадеб под ключ.\nhttps://cherepkovaevent.ru")
+
 
 async def main():
     load_assets()
